@@ -9,7 +9,7 @@ One can control computer's intelligence by increasing or decreasing DEPTH variab
 # Build
 
 ```
-$ cargo run --release
+& cargo run --release -- --depth 6 --mode wubc
 ===== 0-th move:
 8| r n b q k b n r
 7| p p p p p p p p

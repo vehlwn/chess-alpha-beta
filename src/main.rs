@@ -23,7 +23,7 @@ fn get_best_move(
     depth: i32,
     maximize: bool,
     verbose: bool,
-) -> pleco::BitMove {
+) -> (pleco::BitMove, f64) {
     let (best_move, value) = alpha_beta(
         &board,
         depth,
@@ -32,19 +32,39 @@ fn get_best_move(
         maximize,
         verbose,
     );
-    println!(
-        "{} value = {}",
-        if maximize { "White" } else { "Black" },
-        value
-    );
-    return best_move.unwrap();
+    return (best_move.unwrap(), value);
 }
 
-fn main() {
-    const DEPTH: i32 = 6;
-    const VERBOSE: bool = false;
-    const USER_WITH_COMPUTER: bool = true;
+fn computer_with_computer(depth: i32, verbose: bool) {
+    let mut game_board = pleco::Board::default();
+    loop {
+        board_pretty_print(&game_board);
 
+        let white_best = get_best_move(&game_board, depth, true, verbose);
+        println!("White move = {}, value = {}", white_best.0, white_best.1);
+        game_board.apply_move(white_best.0);
+        if game_board.checkmate() {
+            println!("Chechmate! White won!");
+            break;
+        } else if game_board.stalemate() {
+            println!("Stalemate! Game over.");
+            break;
+        }
+
+        let black_best = get_best_move(&game_board, depth, false, verbose);
+        println!("black move = {}, value = {}", black_best.0, black_best.1);
+        game_board.apply_move(black_best.0);
+        if game_board.checkmate() {
+            println!("Chechmate! Black won!");
+            break;
+        } else if game_board.stalemate() {
+            println!("Stalemate! Game over.");
+            break;
+        }
+    }
+}
+
+fn white_user_with_black_computer(depth: i32, verbose: bool) {
     let mut game_board = pleco::Board::default();
     loop {
         board_pretty_print(&game_board);
@@ -59,33 +79,31 @@ fn main() {
             legal_moves,
             legal_moves.len()
         );
-        if USER_WITH_COMPUTER {
-            loop {
-                let user_move = input("Type white move: ");
-                if user_move == "u" {
-                    if game_board.ply() >= 2 {
-                        println!("Undoing...");
-                        game_board.undo_move();
-                        game_board.undo_move();
-                        board_pretty_print(&game_board);
-                    } else {
-                        println!("Cannot be undone");
-                    }
-                    continue;
+        let white_best = get_best_move(&game_board, depth, true, verbose);
+        println!(
+            "White best move = {}, value = {}",
+            white_best.0, white_best.1
+        );
+        loop {
+            let user_move = input("Type white move: ");
+            if user_move == "u" {
+                if game_board.ply() >= 2 {
+                    println!("Undoing...");
+                    game_board.undo_move();
+                    game_board.undo_move();
+                    board_pretty_print(&game_board);
+                } else {
+                    println!("Cannot be undone");
                 }
-                let b = game_board.apply_uci_move(&user_move);
-                if !b {
-                    println!("Invalid move. try again.");
-                    continue;
-                }
-                break;
+                continue;
             }
-        } else {
-            let user_move = get_best_move(&game_board, DEPTH, true, VERBOSE);
-            println!("White move = {}", user_move.to_string());
-            game_board.apply_move(user_move);
+            let b = game_board.apply_uci_move(&user_move);
+            if !b {
+                println!("Invalid move. try again.");
+                continue;
+            }
+            break;
         }
-
         if game_board.checkmate() {
             println!("Chechmate! White won!");
             break;
@@ -94,9 +112,9 @@ fn main() {
             break;
         }
 
-        let black_move = get_best_move(&game_board, DEPTH, false, VERBOSE);
-        println!("black move = {}", black_move);
-        game_board.apply_move(black_move);
+        let black_best = get_best_move(&game_board, depth, false, verbose);
+        println!("black move = {}, value = {}", black_best.0, black_best.1);
+        game_board.apply_move(black_best.0);
         if game_board.checkmate() {
             println!("Chechmate! Black won!");
             break;
@@ -105,4 +123,87 @@ fn main() {
             break;
         }
     }
+}
+
+fn black_user_with_white_computer(depth: i32, verbose: bool) {
+    let mut game_board = pleco::Board::default();
+    loop {
+        let white_best = get_best_move(&game_board, depth, true, verbose);
+        println!("white move = {}, value = {}", white_best.0, white_best.1);
+        game_board.apply_move(white_best.0);
+        board_pretty_print(&game_board);
+        if game_board.checkmate() {
+            println!("Chechmate! White won!");
+            break;
+        } else if game_board.stalemate() {
+            println!("Stalemate! Game over.");
+            break;
+        }
+
+        let mut legal_moves: Vec<String> = game_board
+            .generate_moves()
+            .iter()
+            .map(|x| x.to_string())
+            .collect();
+        legal_moves.sort();
+        println!(
+            "legal_moves = {:?}, len = {}",
+            legal_moves,
+            legal_moves.len()
+        );
+        let black_best = get_best_move(&game_board, depth, false, verbose);
+        println!(
+            "Black best move = {}, value = {}",
+            black_best.0, black_best.1
+        );
+        loop {
+            let user_move = input("Type black move: ");
+            if user_move == "u" {
+                if game_board.ply() >= 2 {
+                    println!("Undoing...");
+                    game_board.undo_move();
+                    game_board.undo_move();
+                    board_pretty_print(&game_board);
+                } else {
+                    println!("Cannot be undone");
+                }
+                continue;
+            }
+            let b = game_board.apply_uci_move(&user_move);
+            if !b {
+                println!("Invalid move. try again.");
+                continue;
+            }
+            break;
+        }
+        if game_board.checkmate() {
+            println!("Chechmate! Black won!");
+            break;
+        } else if game_board.stalemate() {
+            println!("Stalemate! Game over.");
+            break;
+        }
+    }
+}
+
+fn main() {
+    const DEPTH: i32 = 6;
+    const VERBOSE: bool = false;
+
+    enum GameMode {
+        ComputerWithComputer,
+        WhiteUserWithBlackComputer,
+        BlackUserWithWhiteComputer,
+    };
+
+    let mut mode = GameMode::BlackUserWithWhiteComputer;
+    match mode {
+        GameMode::ComputerWithComputer => computer_with_computer(DEPTH, VERBOSE),
+        GameMode::WhiteUserWithBlackComputer => {
+            white_user_with_black_computer(DEPTH, VERBOSE)
+        }
+        GameMode::BlackUserWithWhiteComputer => {
+            black_user_with_white_computer(DEPTH, VERBOSE)
+        }
+    };
 }

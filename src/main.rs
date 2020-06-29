@@ -34,25 +34,15 @@ fn main() {
                 .possible_values(&["cc", "wubc", "buwc"])
                 .default_value("wubc"),
         )
-         .arg(
-            clap::Arg::with_name("verbose")
-                .short("v")
-                .help("verbosity level")
-                .possible_values(&["0", "1"])
-                .default_value("0"),
-                )
-        .get_matches();
+       .get_matches();
     let depth: i32 = matches.value_of("depth").unwrap().parse().unwrap();
     println!("depth = {}", depth);
 
-    let verbose: bool =
-        matches.value_of("verbose").unwrap().parse::<i32>().unwrap() == 1;
-
-    let mode = matches.value_of("mode").unwrap();
+   let mode = matches.value_of("mode").unwrap();
     match mode {
-        "cc" => computer_with_computer(depth, verbose),
-        "wubc" => white_user_with_black_computer(depth, verbose),
-        "buwc" => black_user_with_white_computer(depth, verbose),
+        "cc" => computer_with_computer(depth),
+        "wubc" => white_user_with_black_computer(depth),
+        "buwc" => black_user_with_white_computer(depth),
         x => panic!("Unknown mode: '{}'", x),
     };
 }

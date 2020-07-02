@@ -14,7 +14,91 @@ fn input(promt: &str) -> String {
     return ret.trim().to_string();
 }
 
-pub fn computer_with_computer(settings: &GameSettings) {
+enum UserCommand {
+    MakeMove(String),
+    Undo,
+    ChangeDepth(i32),
+    ChangeEvaluateUser(bool),
+}
+
+fn input_user_command(promt: &str) -> Option<UserCommand> {
+    let s = input(promt);
+    {
+        let re = regex::Regex::new(r"d\s+(\d+)").unwrap();
+        if let Some(caps) = re.captures(&s) {
+            let depth = caps.get(1)?.as_str().parse::<i32>().ok()?;
+            return Some(UserCommand::ChangeDepth(depth));
+        }
+    }
+    {
+        let re = regex::Regex::new(r"e\s+(0|1)").unwrap();
+        if let Some(caps) = re.captures(&s) {
+            let e = caps.get(1)?.as_str().parse::<i32>().ok()? != 0;
+            return Some(UserCommand::ChangeEvaluateUser(e));
+        }
+    }
+    {
+        if s == "u" {
+            return Some(UserCommand::Undo);
+        }
+    }
+    return Some(UserCommand::MakeMove(s));
+}
+
+fn handle_user_move(game_board: &mut pleco::Board, settings: &mut GameSettings) {
+    loop {
+        let user_move = input_user_command(&format!(
+            "Type {} move: ",
+            if game_board.turn() == pleco::Player::White {
+                "white"
+            } else {
+                "black"
+            }
+        ));
+        if user_move.is_none() {
+            println!("Invalid command. Try again.");
+            continue;
+        }
+        match user_move.unwrap() {
+            UserCommand::Undo => {
+                if game_board.ply() >= 2 {
+                    println!("Undoing...");
+                    game_board.undo_move();
+                    game_board.undo_move();
+                    board_pretty_print(&game_board);
+                    continue;
+                } else {
+                    println!("Cannot be undone");
+                    continue;
+                }
+            }
+            UserCommand::MakeMove(user_move) => {
+                let b = game_board.apply_uci_move(&user_move);
+                if !b {
+                    println!("Invalid move. try again.");
+                    continue;
+                }
+                break;
+            }
+            UserCommand::ChangeDepth(d) => {
+                if d <= 0 {
+                    println!("Invalid depth. Try again.");
+                    continue;
+                }
+                println!("depth = {}", d);
+                settings.depth = d;
+                continue;
+            }
+            UserCommand::ChangeEvaluateUser(e) => {
+                println!("evaluate_user = {}", e);
+                settings.evaluate_user = e;
+                continue;
+            }
+        }
+    }
+}
+
+pub fn computer_with_computer(settings: GameSettings) {
     let mut game_board = pleco::Board::default();
     loop {
         board_pretty_print(&game_board);
@@ -43,7 +127,7 @@ pub fn computer_with_computer(settings: &GameSettings) {
     }
 }
 
-pub fn white_user_with_black_computer(settings: &GameSettings) {
+pub fn white_user_with_black_computer(mut settings: GameSettings) {
     let mut game_board = pleco::Board::default();
     loop {
         board_pretty_print(&game_board);
@@ -65,26 +149,7 @@ pub fn white_user_with_black_computer(settings: &GameSettings) {
                 white_best.0, white_best.1
             );
         }
-        loop {
-            let user_move = input("Type white move: ");
-            if user_move == "u" {
-                if game_board.ply() >= 2 {
-                    println!("Undoing...");
-                    game_board.undo_move();
-                    game_board.undo_move();
-                    board_pretty_print(&game_board);
-                } else {
-                    println!("Cannot be undone");
-                }
-                continue;
-            }
-            let b = game_board.apply_uci_move(&user_move);
-            if !b {
-                println!("Invalid move. try again.");
-                continue;
-            }
-            break;
-        }
+        handle_user_move(&mut game_board, &mut settings);
         if game_board.checkmate() {
             println!("Chechmate! White won!");
             break;
@@ -106,7 +171,7 @@ pub fn white_user_with_black_computer(settings: &GameSettings) {
     }
 }
 
-pub fn black_user_with_white_computer(settings: &GameSettings) {
+pub fn black_user_with_white_computer(mut settings: GameSettings) {
     let mut game_board = pleco::Board::default();
     loop {
         let white_best = get_best_move(&game_board, settings.depth, true);
@@ -139,26 +204,7 @@ pub fn black_user_with_white_computer(settings: &GameSettings) {
                 black_best.0, black_best.1
             );
         }
-        loop {
-            let user_move = input("Type black move: ");
-            if user_move == "u" {
-                if game_board.ply() >= 2 {
-                    println!("Undoing...");
-                    game_board.undo_move();
-                    game_board.undo_move();
-                    board_pretty_print(&game_board);
-                } else {
-                    println!("Cannot be undone");
-                }
-                continue;
-            }
-            let b = game_board.apply_uci_move(&user_move);
-            if !b {
-                println!("Invalid move. try again.");
-                continue;
-            }
-            break;
-        }
+        handle_user_move(&mut game_board, &mut settings);
         if game_board.checkmate() {
             println!("Chechmate! Black won!");
             break;

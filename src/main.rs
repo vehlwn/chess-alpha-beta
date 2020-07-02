@@ -41,6 +41,7 @@ fn main() {
                 .long("evaluate-user")
                 .short("e")
                 .help("show user's potentially best move when playing with computer")
+                .takes_value(true)
                 .possible_values(&["0", "1"])
                 .default_value("0"),
         )
@@ -61,9 +62,9 @@ fn main() {
 
     let mode = matches.value_of("mode").unwrap();
     match mode {
-        "cc" => computer_with_computer(&settings),
-        "wubc" => white_user_with_black_computer(&settings),
-        "buwc" => black_user_with_white_computer(&settings),
+        "cc" => computer_with_computer(settings),
+        "wubc" => white_user_with_black_computer(settings),
+        "buwc" => black_user_with_white_computer(settings),
         x => panic!("Unknown mode: '{}'", x),
     };
 }

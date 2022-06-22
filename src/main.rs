@@ -41,9 +41,9 @@ fn get_best_move(
 }
 
 fn main() {
-    const DEPTH: i32 = 2;
+    const DEPTH: i32 = 6;
     const VERBOSE: bool = false;
-    const USER_WITH_COMPUTER: bool = false;
+    const USER_WITH_COMPUTER: bool = true;
 
     let mut game_board = pleco::Board::default();
     loop {
@@ -84,7 +84,7 @@ fn main() {
             break;
         }
 
-        let black_move = get_best_move(&game_board, DEPTH + 4, false, VERBOSE);
+        let black_move = get_best_move(&game_board, DEPTH, false, VERBOSE);
         println!("black move = {}", black_move);
         game_board.apply_move(black_move);
         if game_board.checkmate() {

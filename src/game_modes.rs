@@ -1,4 +1,4 @@
-use crate::alpha_beta::alpha_beta;
+use crate::alpha_beta::get_best_move;
 use crate::board_pretty_print::board_pretty_print;
 use pleco;
 use std::io::Write;
@@ -13,29 +13,12 @@ fn input(promt: &str) -> String {
     return ret.trim().to_string();
 }
 
-fn get_best_move(
-    board: &pleco::Board,
-    depth: i32,
-    maximize: bool,
-    verbose: bool,
-) -> (pleco::BitMove, f64) {
-    let (best_move, value) = alpha_beta(
-        &board,
-        depth,
-        f64::NEG_INFINITY,
-        f64::INFINITY,
-        maximize,
-        verbose,
-    );
-    return (best_move.unwrap(), value);
-}
-
-pub fn computer_with_computer(depth: i32, verbose: bool) {
+pub fn computer_with_computer(depth: i32) {
     let mut game_board = pleco::Board::default();
     loop {
         board_pretty_print(&game_board);
 
-        let white_best = get_best_move(&game_board, depth, true, verbose);
+        let white_best = get_best_move(&game_board, depth, true);
         println!("White move = {}, value = {}", white_best.0, white_best.1);
         game_board.apply_move(white_best.0);
         if game_board.checkmate() {
@@ -46,7 +29,7 @@ pub fn computer_with_computer(depth: i32, verbose: bool) {
             break;
         }
 
-        let black_best = get_best_move(&game_board, depth, false, verbose);
+        let black_best = get_best_move(&game_board, depth, false);
         println!("black move = {}, value = {}", black_best.0, black_best.1);
         game_board.apply_move(black_best.0);
         if game_board.checkmate() {
@@ -59,7 +42,7 @@ pub fn computer_with_computer(depth: i32, verbose: bool) {
     }
 }
 
-pub fn white_user_with_black_computer(depth: i32, verbose: bool) {
+pub fn white_user_with_black_computer(depth: i32) {
     let mut game_board = pleco::Board::default();
     loop {
         board_pretty_print(&game_board);
@@ -74,7 +57,7 @@ pub fn white_user_with_black_computer(depth: i32, verbose: bool) {
             legal_moves,
             legal_moves.len()
         );
-        let white_best = get_best_move(&game_board, depth, true, verbose);
+        let white_best = get_best_move(&game_board, depth, true);
         println!(
             "White best move = {}, value = {}",
             white_best.0, white_best.1
@@ -107,7 +90,7 @@ pub fn white_user_with_black_computer(depth: i32, verbose: bool) {
             break;
         }
 
-        let black_best = get_best_move(&game_board, depth, false, verbose);
+        let black_best = get_best_move(&game_board, depth, false);
         println!("black move = {}, value = {}", black_best.0, black_best.1);
         game_board.apply_move(black_best.0);
         if game_board.checkmate() {
@@ -120,10 +103,10 @@ pub fn white_user_with_black_computer(depth: i32, verbose: bool) {
     }
 }
 
-pub fn black_user_with_white_computer(depth: i32, verbose: bool) {
+pub fn black_user_with_white_computer(depth: i32) {
     let mut game_board = pleco::Board::default();
     loop {
-        let white_best = get_best_move(&game_board, depth, true, verbose);
+        let white_best = get_best_move(&game_board, depth, true);
         println!("white move = {}, value = {}", white_best.0, white_best.1);
         game_board.apply_move(white_best.0);
         board_pretty_print(&game_board);
@@ -146,7 +129,7 @@ pub fn black_user_with_white_computer(depth: i32, verbose: bool) {
             legal_moves,
             legal_moves.len()
         );
-        let black_best = get_best_move(&game_board, depth, false, verbose);
+        let black_best = get_best_move(&game_board, depth, false);
         println!(
             "Black best move = {}, value = {}",
             black_best.0, black_best.1

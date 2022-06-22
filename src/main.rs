@@ -10,8 +10,6 @@ use game_modes::computer_with_computer;
 use game_modes::white_user_with_black_computer;
 
 fn main() {
-    const VERBOSE: bool = false;
-
     let matches = clap::App::new("chess-alpha-beta")
         .arg(
             clap::Arg::with_name("depth")

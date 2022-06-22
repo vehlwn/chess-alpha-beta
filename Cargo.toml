@@ -8,3 +8,4 @@ edition = "2018"
 [dependencies]
 pleco = "0.5.0"
 rand = "0.7.3"
+clap = "2.33.1"

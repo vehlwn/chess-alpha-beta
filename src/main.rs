@@ -1,209 +1,60 @@
 mod alpha_beta;
 mod board_pretty_print;
 mod board_value;
+mod game_modes;
 mod shuffled_move_list;
 
-use alpha_beta::alpha_beta;
-use board_pretty_print::board_pretty_print;
-use pleco;
-use std::io::Write;
-
-fn input(promt: &str) -> String {
-    let mut ret = String::new();
-    print!("{}", promt);
-    std::io::stdout().flush().expect("flush failed");
-    std::io::stdin()
-        .read_line(&mut ret)
-        .expect("Failed to read line");
-    return ret.trim().to_string();
-}
-
-fn get_best_move(
-    board: &pleco::Board,
-    depth: i32,
-    maximize: bool,
-    verbose: bool,
-) -> (pleco::BitMove, f64) {
-    let (best_move, value) = alpha_beta(
-        &board,
-        depth,
-        f64::NEG_INFINITY,
-        f64::INFINITY,
-        maximize,
-        verbose,
-    );
-    return (best_move.unwrap(), value);
-}
-
-fn computer_with_computer(depth: i32, verbose: bool) {
-    let mut game_board = pleco::Board::default();
-    loop {
-        board_pretty_print(&game_board);
-
-        let white_best = get_best_move(&game_board, depth, true, verbose);
-        println!("White move = {}, value = {}", white_best.0, white_best.1);
-        game_board.apply_move(white_best.0);
-        if game_board.checkmate() {
-            println!("Chechmate! White won!");
-            break;
-        } else if game_board.stalemate() {
-            println!("Stalemate! Game over.");
-            break;
-        }
-
-        let black_best = get_best_move(&game_board, depth, false, verbose);
-        println!("black move = {}, value = {}", black_best.0, black_best.1);
-        game_board.apply_move(black_best.0);
-        if game_board.checkmate() {
-            println!("Chechmate! Black won!");
-            break;
-        } else if game_board.stalemate() {
-            println!("Stalemate! Game over.");
-            break;
-        }
-    }
-}
-
-fn white_user_with_black_computer(depth: i32, verbose: bool) {
-    let mut game_board = pleco::Board::default();
-    loop {
-        board_pretty_print(&game_board);
-        let mut legal_moves: Vec<String> = game_board
-            .generate_moves()
-            .iter()
-            .map(|x| x.to_string())
-            .collect();
-        legal_moves.sort();
-        println!(
-            "legal_moves = {:?}, len = {}",
-            legal_moves,
-            legal_moves.len()
-        );
-        let white_best = get_best_move(&game_board, depth, true, verbose);
-        println!(
-            "White best move = {}, value = {}",
-            white_best.0, white_best.1
-        );
-        loop {
-            let user_move = input("Type white move: ");
-            if user_move == "u" {
-                if game_board.ply() >= 2 {
-                    println!("Undoing...");
-                    game_board.undo_move();
-                    game_board.undo_move();
-                    board_pretty_print(&game_board);
-                } else {
-                    println!("Cannot be undone");
-                }
-                continue;
-            }
-            let b = game_board.apply_uci_move(&user_move);
-            if !b {
-                println!("Invalid move. try again.");
-                continue;
-            }
-            break;
-        }
-        if game_board.checkmate() {
-            println!("Chechmate! White won!");
-            break;
-        } else if game_board.stalemate() {
-            println!("Stalemate! Game over.");
-            break;
-        }
-
-        let black_best = get_best_move(&game_board, depth, false, verbose);
-        println!("black move = {}, value = {}", black_best.0, black_best.1);
-        game_board.apply_move(black_best.0);
-        if game_board.checkmate() {
-            println!("Chechmate! Black won!");
-            break;
-        } else if game_board.stalemate() {
-            println!("Stalemate! Game over.");
-            break;
-        }
-    }
-}
-
-fn black_user_with_white_computer(depth: i32, verbose: bool) {
-    let mut game_board = pleco::Board::default();
-    loop {
-        let white_best = get_best_move(&game_board, depth, true, verbose);
-        println!("white move = {}, value = {}", white_best.0, white_best.1);
-        game_board.apply_move(white_best.0);
-        board_pretty_print(&game_board);
-        if game_board.checkmate() {
-            println!("Chechmate! White won!");
-            break;
-        } else if game_board.stalemate() {
-            println!("Stalemate! Game over.");
-            break;
-        }
-
-        let mut legal_moves: Vec<String> = game_board
-            .generate_moves()
-            .iter()
-            .map(|x| x.to_string())
-            .collect();
-        legal_moves.sort();
-        println!(
-            "legal_moves = {:?}, len = {}",
-            legal_moves,
-            legal_moves.len()
-        );
-        let black_best = get_best_move(&game_board, depth, false, verbose);
-        println!(
-            "Black best move = {}, value = {}",
-            black_best.0, black_best.1
-        );
-        loop {
-            let user_move = input("Type black move: ");
-            if user_move == "u" {
-                if game_board.ply() >= 2 {
-                    println!("Undoing...");
-                    game_board.undo_move();
-                    game_board.undo_move();
-                    board_pretty_print(&game_board);
-                } else {
-                    println!("Cannot be undone");
-                }
-                continue;
-            }
-            let b = game_board.apply_uci_move(&user_move);
-            if !b {
-                println!("Invalid move. try again.");
-                continue;
-            }
-            break;
-        }
-        if game_board.checkmate() {
-            println!("Chechmate! Black won!");
-            break;
-        } else if game_board.stalemate() {
-            println!("Stalemate! Game over.");
-            break;
-        }
-    }
-}
+use clap;
+use game_modes::black_user_with_white_computer;
+use game_modes::computer_with_computer;
+use game_modes::white_user_with_black_computer;
 
 fn main() {
-    const DEPTH: i32 = 6;
     const VERBOSE: bool = false;
 
-    enum GameMode {
-        ComputerWithComputer,
-        WhiteUserWithBlackComputer,
-        BlackUserWithWhiteComputer,
-    };
+    let matches = clap::App::new("chess-alpha-beta")
+        .arg(
+            clap::Arg::with_name("depth")
+                .long("depth")
+                .short("d")
+                .help("depth of search tree")
+                .default_value("6")
+                .validator(|s| {
+                    if let Ok(n) = s.parse::<i32>() {
+                        if n > 0 {
+                            return Ok(());
+                        }
+                    }
+                    return Err("depth must be positive integer".to_owned());
+                }),
+        )
+        .arg(
+            clap::Arg::with_name("mode")
+                .long("mode")
+                .short("m")
+                .help("game mode: Computer-Computer, White User-Black Computer, Black User-White Computer")
+                .possible_values(&["cc", "wubc", "buwc"])
+                .default_value("wubc"),
+        )
+         .arg(
+            clap::Arg::with_name("verbose")
+                .short("v")
+                .help("verbosity level")
+                .possible_values(&["0", "1"])
+                .default_value("0"),
+                )
+        .get_matches();
+    let depth: i32 = matches.value_of("depth").unwrap().parse().unwrap();
+    println!("depth = {}", depth);
 
-    let mut mode = GameMode::BlackUserWithWhiteComputer;
+    let verbose: bool =
+        matches.value_of("verbose").unwrap().parse::<i32>().unwrap() == 1;
+
+    let mode = matches.value_of("mode").unwrap();
     match mode {
-        GameMode::ComputerWithComputer => computer_with_computer(DEPTH, VERBOSE),
-        GameMode::WhiteUserWithBlackComputer => {
-            white_user_with_black_computer(DEPTH, VERBOSE)
-        }
-        GameMode::BlackUserWithWhiteComputer => {
-            black_user_with_white_computer(DEPTH, VERBOSE)
-        }
+        "cc" => computer_with_computer(depth, verbose),
+        "wubc" => white_user_with_black_computer(depth, verbose),
+        "buwc" => black_user_with_white_computer(depth, verbose),
+        x => panic!("Unknown mode: '{}'", x),
     };
 }

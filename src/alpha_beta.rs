@@ -1,6 +1,6 @@
 use crate::board_value::board_value;
 use crate::shuffled_move_list::shuffled_move_list;
-use pleco;
+use rayon::prelude::*;
 
 pub type ValueType = i32;
 
@@ -18,8 +18,28 @@ pub struct EvaluatedMove {
     pub m: pleco::BitMove,
     pub value: ValueType,
 }
+impl PartialEq for EvaluatedMove {
+    fn eq(&self, other: &Self) -> bool {
+        return self.value == other.value;
+    }
+}
+impl Eq for EvaluatedMove {}
+impl PartialOrd for EvaluatedMove {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        return Some(self.cmp(other));
+    }
+}
+impl Ord for EvaluatedMove {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        return self.value.cmp(&other.value);
+    }
+}
 
-pub fn get_best_move(board: &pleco::Board, depth: i32, maximize: bool) -> EvaluatedMove {
+pub fn get_best_move(
+    board: &pleco::Board,
+    depth: i32,
+    maximize: bool,
+) -> EvaluatedMove {
     let context = EvaluationContext {
         max_depth: depth,
         current_depth: depth,
@@ -27,10 +47,67 @@ pub fn get_best_move(board: &pleco::Board, depth: i32, maximize: bool) -> Evalua
         beta: ValueType::MAX,
         maximize,
     };
-    return alpha_beta(board, context);
+    let possible_moves = shuffled_move_list(board.generate_moves());
+    if context.maximize {
+        // Use par_iter for only the first level of minimax algorithm.
+        let best_move = possible_moves
+            .par_iter()
+            .cloned()
+            .map(|m| {
+                let mut experiment_board = board.clone();
+                experiment_board.apply_move(m);
+                let evaluated_move = alpha_beta_impl(
+                    &experiment_board,
+                    EvaluationContext {
+                        max_depth: context.max_depth,
+                        current_depth: context.current_depth - 1,
+                        alpha: context.alpha,
+                        beta: context.beta,
+                        maximize: !context.maximize,
+                    },
+                );
+                experiment_board.undo_move();
+                return EvaluatedMove {
+                    m,
+                    value: evaluated_move.value,
+                };
+            })
+            .max()
+            .unwrap();
+        return best_move;
+    } else {
+        let best_move = possible_moves
+            .par_iter()
+            .cloned()
+            .map(|m| {
+                let mut experiment_board = board.clone();
+                experiment_board.apply_move(m);
+                let evaluated_move = alpha_beta_impl(
+                    &experiment_board,
+                    EvaluationContext {
+                        max_depth: context.max_depth,
+                        current_depth: context.current_depth - 1,
+                        alpha: context.alpha,
+                        beta: context.beta,
+                        maximize: !context.maximize,
+                    },
+                );
+                experiment_board.undo_move();
+                return EvaluatedMove {
+                    m,
+                    value: evaluated_move.value,
+                };
+            })
+            .min()
+            .unwrap();
+        return best_move;
+    }
 }
 
-fn alpha_beta(board: &pleco::Board, mut context: EvaluationContext) -> EvaluatedMove {
+fn alpha_beta_impl(
+    board: &pleco::Board,
+    mut context: EvaluationContext,
+) -> EvaluatedMove {
     if context.current_depth <= 0 || board.checkmate() {
         return EvaluatedMove {
             m: pleco::BitMove::null(),
@@ -51,7 +128,7 @@ fn alpha_beta(board: &pleco::Board, mut context: EvaluationContext) -> Evaluated
         };
         for m in shuffled_move_list(board.generate_moves()) {
             experiment_board.apply_move(m);
-            let evaluated_move = alpha_beta(
+            let evaluated_move = alpha_beta_impl(
                 &experiment_board,
                 EvaluationContext {
                     max_depth: context.max_depth,
@@ -79,7 +156,7 @@ fn alpha_beta(board: &pleco::Board, mut context: EvaluationContext) -> Evaluated
         };
         for m in shuffled_move_list(board.generate_moves()) {
             experiment_board.apply_move(m);
-            let evaluated_move = alpha_beta(
+            let evaluated_move = alpha_beta_impl(
                 &experiment_board,
                 EvaluationContext {
                     max_depth: context.max_depth,

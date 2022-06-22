@@ -130,10 +130,10 @@ fn board_value(board: &pleco::Board) -> f64 {
     return 1. * pawn_diff + 3. * bishop_diff + 3. * knight_diff + 5. * rook_diff + 9. * queen_diff;
 }
 
-fn get_best_move(board: &pleco::Board, depth: i32) -> pleco::core::piece_move::BitMove {
+fn get_best_move(board: &pleco::Board, depth: i32) -> pleco::BitMove {
     let mut min_value = f64::INFINITY;
     let mut experiment_board = board.clone();
-    let mut min_move = pleco::core::piece_move::BitMove::null();
+    let mut min_move = pleco::BitMove::null();
     for m in board.generate_moves() {
         experiment_board.apply_move(m);
         let value = alpha_beta(

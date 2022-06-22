@@ -4,7 +4,8 @@ use pleco;
 
 pub type ValueType = i32;
 
-pub struct AlphaBetaParameters {
+#[derive(Debug, Clone)]
+pub struct EvaluationContext {
     pub max_depth: i32,
     pub current_depth: i32,
     pub alpha: ValueType,
@@ -12,129 +13,92 @@ pub struct AlphaBetaParameters {
     pub maximize: bool,
 }
 
-pub fn get_best_move(
-    board: &pleco::Board,
-    depth: i32,
-    maximize: bool,
-) -> (pleco::BitMove, ValueType) {
-    // Perform separate step of alpha-beta pruning to get best value along with a move.
-    let mut experiment_board = board.clone();
-    let mut best_move = pleco::BitMove::null();
-    let mut params = AlphaBetaParameters {
+#[derive(Debug, Clone)]
+pub struct EvaluatedMove {
+    pub m: pleco::BitMove,
+    pub value: ValueType,
+}
+
+pub fn get_best_move(board: &pleco::Board, depth: i32, maximize: bool) -> EvaluatedMove {
+    let context = EvaluationContext {
         max_depth: depth,
         current_depth: depth,
         alpha: ValueType::MIN,
         beta: ValueType::MAX,
         maximize,
     };
-    if params.maximize {
-        let mut best_value = ValueType::MIN;
-        for m in shuffled_move_list(board.generate_moves()) {
-            experiment_board.apply_move(m);
-            let value = alpha_beta(
-                &experiment_board,
-                &mut AlphaBetaParameters {
-                    max_depth: params.max_depth,
-                    current_depth: params.current_depth - 1,
-                    alpha: params.alpha,
-                    beta: params.beta,
-                    maximize: !params.maximize,
-                },
-            );
-            experiment_board.undo_move();
-            if value > best_value {
-                best_value = value;
-                best_move = m;
-            }
-            params.alpha = params.alpha.max(best_value);
-            if params.alpha >= params.beta {
-                break;
-            }
-        }
-        return (best_move, best_value);
-    } else {
-        let mut best_value = ValueType::MAX;
-        for m in shuffled_move_list(board.generate_moves()) {
-            experiment_board.apply_move(m);
-            let value = alpha_beta(
-                &experiment_board,
-                &mut AlphaBetaParameters {
-                    max_depth: params.max_depth,
-                    current_depth: params.current_depth - 1,
-                    alpha: params.alpha,
-                    beta: params.beta,
-                    maximize: !params.maximize,
-                },
-            );
-            experiment_board.undo_move();
-            if value < best_value {
-                best_value = value;
-                best_move = m;
-            }
-            params.beta = params.beta.min(best_value);
-            if params.alpha >= params.beta {
-                break;
-            }
-        }
-        return (best_move, best_value);
-    }
+    return alpha_beta(board, context);
 }
 
-fn alpha_beta(board: &pleco::Board, params: &mut AlphaBetaParameters) -> ValueType {
-    if params.current_depth <= 0 || board.checkmate() {
-        return board_value(&board, &params);
+fn alpha_beta(board: &pleco::Board, mut context: EvaluationContext) -> EvaluatedMove {
+    if context.current_depth <= 0 || board.checkmate() {
+        return EvaluatedMove {
+            m: pleco::BitMove::null(),
+            value: board_value(&board, &context),
+        };
     }
     if board.stalemate() {
-        return ValueType::default();
+        return EvaluatedMove {
+            m: pleco::BitMove::null(),
+            value: ValueType::default(),
+        };
     }
     let mut experiment_board = board.clone();
-    if params.maximize {
-        let mut best_value = ValueType::MIN;
+    if context.maximize {
+        let mut best_move = EvaluatedMove {
+            m: pleco::BitMove::null(),
+            value: ValueType::MIN,
+        };
         for m in shuffled_move_list(board.generate_moves()) {
             experiment_board.apply_move(m);
-            let value = alpha_beta(
+            let evaluated_move = alpha_beta(
                 &experiment_board,
-                &mut AlphaBetaParameters {
-                    max_depth: params.max_depth,
-                    current_depth: params.current_depth - 1,
-                    alpha: params.alpha,
-                    beta: params.beta,
-                    maximize: !params.maximize,
+                EvaluationContext {
+                    max_depth: context.max_depth,
+                    current_depth: context.current_depth - 1,
+                    alpha: context.alpha,
+                    beta: context.beta,
+                    maximize: !context.maximize,
                 },
             );
             experiment_board.undo_move();
-            if value > best_value {
-                best_value = value;
+            if evaluated_move.value > best_move.value {
+                best_move.m = m;
+                best_move.value = evaluated_move.value;
             }
-            params.alpha = params.alpha.max(best_value);
-            if params.alpha >= params.beta {
+            context.alpha = context.alpha.max(best_move.value);
+            if context.alpha >= context.beta {
                 break;
             }
         }
-        return best_value;
+        return best_move;
     } else {
-        let mut best_value = ValueType::MAX;
+        let mut best_move = EvaluatedMove {
+            m: pleco::BitMove::null(),
+            value: ValueType::MAX,
+        };
         for m in shuffled_move_list(board.generate_moves()) {
             experiment_board.apply_move(m);
-            let value = alpha_beta(
+            let evaluated_move = alpha_beta(
                 &experiment_board,
-                &mut AlphaBetaParameters {
-                    max_depth: params.max_depth,
-                    current_depth: params.current_depth - 1,
-                    alpha: params.alpha,
-                    beta: params.beta,
-                    maximize: !params.maximize,
+                EvaluationContext {
+                    max_depth: context.max_depth,
+                    current_depth: context.current_depth - 1,
+                    alpha: context.alpha,
+                    beta: context.beta,
+                    maximize: !context.maximize,
                 },
             );
             experiment_board.undo_move();
-            if value < best_value {
-                best_value = value;
+            if evaluated_move.value < best_move.value {
+                best_move.m = m;
+                best_move.value = evaluated_move.value;
             }
-            params.beta = params.beta.min(best_value);
-            if params.alpha >= params.beta {
+            context.beta = context.beta.min(best_move.value);
+            if context.alpha >= context.beta {
                 break;
             }
         }
-        return best_value;
+        return best_move;
     }
 }

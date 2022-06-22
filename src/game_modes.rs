@@ -1,7 +1,6 @@
 use crate::alpha_beta::get_best_move;
 use crate::board_pretty_print::board_pretty_print;
-use crate::game_settings::GameSettings;
-use pleco;
+use crate::config::Config;
 use std::io::Write;
 
 fn input(promt: &str) -> String {
@@ -45,7 +44,7 @@ fn input_user_command(promt: &str) -> Option<UserCommand> {
     return Some(UserCommand::MakeMove(s));
 }
 
-fn handle_user_move(game_board: &mut pleco::Board, settings: &mut GameSettings) {
+fn handle_user_move(game_board: &mut pleco::Board, config: &mut Config) {
     loop {
         let user_move = input_user_command(&format!(
             "Type {} move: ",
@@ -86,26 +85,29 @@ fn handle_user_move(game_board: &mut pleco::Board, settings: &mut GameSettings) 
                     continue;
                 }
                 println!("depth = {}", d);
-                settings.depth = d;
+                config.depth = d;
                 continue;
             }
             UserCommand::ChangeEvaluateUser(e) => {
                 println!("evaluate_user = {}", e);
-                settings.evaluate_user = e;
+                config.evaluate_user = e;
                 continue;
             }
         }
     }
 }
 
-pub fn computer_with_computer(settings: GameSettings) {
+pub fn computer_with_computer(config: Config) {
     let mut game_board = pleco::Board::default();
     loop {
         board_pretty_print(&game_board);
 
-        let white_best = get_best_move(&game_board, settings.depth, true);
-        println!("White move = {}, value = {}", white_best.0, white_best.1);
-        game_board.apply_move(white_best.0);
+        let white_best = get_best_move(&game_board, config.depth, true);
+        println!(
+            "White move = {}, value = {}",
+            white_best.m, white_best.value
+        );
+        game_board.apply_move(white_best.m);
         if game_board.checkmate() {
             println!("Chechmate! White won!");
             break;
@@ -114,9 +116,12 @@ pub fn computer_with_computer(settings: GameSettings) {
             break;
         }
 
-        let black_best = get_best_move(&game_board, settings.depth, false);
-        println!("black move = {}, value = {}", black_best.0, black_best.1);
-        game_board.apply_move(black_best.0);
+        let black_best = get_best_move(&game_board, config.depth, false);
+        println!(
+            "black move = {}, value = {}",
+            black_best.m, black_best.value
+        );
+        game_board.apply_move(black_best.m);
         if game_board.checkmate() {
             println!("Chechmate! Black won!");
             break;
@@ -127,7 +132,7 @@ pub fn computer_with_computer(settings: GameSettings) {
     }
 }
 
-pub fn white_user_with_black_computer(mut settings: GameSettings) {
+pub fn white_user_with_black_computer(mut config: Config) {
     let mut game_board = pleco::Board::default();
     loop {
         board_pretty_print(&game_board);
@@ -142,14 +147,14 @@ pub fn white_user_with_black_computer(mut settings: GameSettings) {
             legal_moves,
             legal_moves.len()
         );
-        if settings.evaluate_user {
-            let white_best = get_best_move(&game_board, settings.depth, true);
+        if config.evaluate_user {
+            let white_best = get_best_move(&game_board, config.depth, true);
             println!(
                 "White best move = {}, value = {}",
-                white_best.0, white_best.1
+                white_best.m, white_best.value
             );
         }
-        handle_user_move(&mut game_board, &mut settings);
+        handle_user_move(&mut game_board, &mut config);
         if game_board.checkmate() {
             println!("Chechmate! White won!");
             break;
@@ -158,9 +163,12 @@ pub fn white_user_with_black_computer(mut settings: GameSettings) {
             break;
         }
 
-        let black_best = get_best_move(&game_board, settings.depth, false);
-        println!("black move = {}, value = {}", black_best.0, black_best.1);
-        game_board.apply_move(black_best.0);
+        let black_best = get_best_move(&game_board, config.depth, false);
+        println!(
+            "black move = {}, value = {}",
+            black_best.m, black_best.value
+        );
+        game_board.apply_move(black_best.m);
         if game_board.checkmate() {
             println!("Chechmate! Black won!");
             break;
@@ -171,12 +179,15 @@ pub fn white_user_with_black_computer(mut settings: GameSettings) {
     }
 }
 
-pub fn black_user_with_white_computer(mut settings: GameSettings) {
+pub fn black_user_with_white_computer(mut config: Config) {
     let mut game_board = pleco::Board::default();
     loop {
-        let white_best = get_best_move(&game_board, settings.depth, true);
-        println!("white move = {}, value = {}", white_best.0, white_best.1);
-        game_board.apply_move(white_best.0);
+        let white_best = get_best_move(&game_board, config.depth, true);
+        println!(
+            "white move = {}, value = {}",
+            white_best.m, white_best.value
+        );
+        game_board.apply_move(white_best.m);
         board_pretty_print(&game_board);
         if game_board.checkmate() {
             println!("Chechmate! White won!");
@@ -197,14 +208,14 @@ pub fn black_user_with_white_computer(mut settings: GameSettings) {
             legal_moves,
             legal_moves.len()
         );
-        if settings.evaluate_user {
-            let black_best = get_best_move(&game_board, settings.depth, false);
+        if config.evaluate_user {
+            let black_best = get_best_move(&game_board, config.depth, false);
             println!(
                 "Black best move = {}, value = {}",
-                black_best.0, black_best.1
+                black_best.m, black_best.value
             );
         }
-        handle_user_move(&mut game_board, &mut settings);
+        handle_user_move(&mut game_board, &mut config);
         if game_board.checkmate() {
             println!("Chechmate! Black won!");
             break;

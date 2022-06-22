@@ -28,6 +28,7 @@ pub fn board_pretty_print(board: &pleco::Board) {
         };
     };
 
+    println!("===== {}-th move:", board.ply());
     for row in (0..8).rev() {
         print!("{}| ", row + 1);
         for col in 0..8 {

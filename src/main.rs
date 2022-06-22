@@ -47,7 +47,6 @@ fn main() {
 
     let mut game_board = pleco::Board::default();
     loop {
-        println!("===== {}-th move:", game_board.ply());
         board_pretty_print(&game_board);
         let mut legal_moves: Vec<String> = game_board
             .generate_moves()
@@ -63,6 +62,17 @@ fn main() {
         if USER_WITH_COMPUTER {
             loop {
                 let user_move = input("Type white move: ");
+                if user_move == "u" {
+                    if game_board.ply() >= 2 {
+                        println!("Undoing...");
+                        game_board.undo_move();
+                        game_board.undo_move();
+                        board_pretty_print(&game_board);
+                    } else {
+                        println!("Cannot be undone");
+                    }
+                    continue;
+                }
                 let b = game_board.apply_uci_move(&user_move);
                 if !b {
                     println!("Invalid move. try again.");

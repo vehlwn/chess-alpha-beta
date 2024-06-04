@@ -1,13 +1,12 @@
 use crate::board_value::board_value;
 use crate::shuffled_move_list::shuffled_move_list;
-use rayon::prelude::*;
 
 pub type ValueType = i32;
 
 #[derive(Debug, Clone)]
 pub struct EvaluationContext {
-    pub max_depth: i32,
-    pub current_depth: i32,
+    pub max_depth: u32,
+    pub current_depth: u32,
     pub alpha: ValueType,
     pub beta: ValueType,
     pub maximize: bool,
@@ -35,11 +34,14 @@ impl Ord for EvaluatedMove {
     }
 }
 
-pub fn get_best_move(
-    board: &pleco::Board,
-    depth: i32,
-    maximize: bool,
-) -> EvaluatedMove {
+pub fn get_best_move(board: &pleco::Board, depth: u32) -> EvaluatedMove {
+    use pleco::Player;
+    use rayon::prelude::*;
+
+    let maximize = match board.turn() {
+        Player::White => true,
+        Player::Black => false,
+    };
     let context = EvaluationContext {
         max_depth: depth,
         current_depth: depth,

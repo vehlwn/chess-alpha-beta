@@ -16,7 +16,7 @@ fn input(promt: &str) -> String {
 enum UserCommand {
     MakeMove(String),
     Undo,
-    ChangeDepth(i32),
+    ChangeDepth(std::num::NonZeroU32),
     ChangeEvaluateUser(bool),
 }
 
@@ -25,7 +25,8 @@ fn input_user_command(promt: &str) -> Option<UserCommand> {
     {
         let re = regex::Regex::new(r"d\s+(\d+)").unwrap();
         if let Some(caps) = re.captures(&s) {
-            let depth = caps.get(1)?.as_str().parse::<i32>().ok()?;
+            let depth =
+                caps.get(1)?.as_str().parse::<std::num::NonZeroU32>().ok()?;
             return Some(UserCommand::ChangeDepth(depth));
         }
     }
@@ -80,10 +81,6 @@ fn handle_user_move(game_board: &mut pleco::Board, config: &mut Config) {
                 break;
             }
             UserCommand::ChangeDepth(d) => {
-                if d <= 0 {
-                    println!("Invalid depth. Try again.");
-                    continue;
-                }
                 println!("depth = {}", d);
                 config.depth = d;
                 continue;
@@ -102,7 +99,7 @@ pub fn computer_with_computer(config: Config) {
     loop {
         board_pretty_print(&game_board);
 
-        let white_best = get_best_move(&game_board, config.depth, true);
+        let white_best = get_best_move(&game_board, config.depth.get());
         println!(
             "White move = {}, value = {}",
             white_best.m, white_best.value
@@ -116,7 +113,7 @@ pub fn computer_with_computer(config: Config) {
             break;
         }
 
-        let black_best = get_best_move(&game_board, config.depth, false);
+        let black_best = get_best_move(&game_board, config.depth.get());
         println!(
             "black move = {}, value = {}",
             black_best.m, black_best.value
@@ -148,7 +145,7 @@ pub fn white_user_with_black_computer(mut config: Config) {
             legal_moves.len()
         );
         if config.evaluate_user {
-            let white_best = get_best_move(&game_board, config.depth, true);
+            let white_best = get_best_move(&game_board, config.depth.get());
             println!(
                 "White best move = {}, value = {}",
                 white_best.m, white_best.value
@@ -163,7 +160,7 @@ pub fn white_user_with_black_computer(mut config: Config) {
             break;
         }
 
-        let black_best = get_best_move(&game_board, config.depth, false);
+        let black_best = get_best_move(&game_board, config.depth.get());
         println!(
             "black move = {}, value = {}",
             black_best.m, black_best.value
@@ -182,7 +179,7 @@ pub fn white_user_with_black_computer(mut config: Config) {
 pub fn black_user_with_white_computer(mut config: Config) {
     let mut game_board = pleco::Board::default();
     loop {
-        let white_best = get_best_move(&game_board, config.depth, true);
+        let white_best = get_best_move(&game_board, config.depth.get());
         println!(
             "white move = {}, value = {}",
             white_best.m, white_best.value
@@ -209,7 +206,7 @@ pub fn black_user_with_white_computer(mut config: Config) {
             legal_moves.len()
         );
         if config.evaluate_user {
-            let black_best = get_best_move(&game_board, config.depth, false);
+            let black_best = get_best_move(&game_board, config.depth.get());
             println!(
                 "Black best move = {}, value = {}",
                 black_best.m, black_best.value

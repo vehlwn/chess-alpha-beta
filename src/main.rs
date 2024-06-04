@@ -3,7 +3,6 @@ mod board_pretty_print;
 mod board_value;
 mod config;
 mod game_modes;
-mod shuffled_move_list;
 
 use clap::Parser;
 use config::{Config, GameMode};

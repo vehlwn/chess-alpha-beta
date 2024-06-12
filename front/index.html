@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <title>Chess Alpha Beta</title>
+
+        <link rel="stylesheet" href="assets/chessboard.css" />
+        <link rel="stylesheet" href="assets/extensions/markers/markers.css" />
+        <link
+            rel="stylesheet"
+            href="assets/extensions/promotion-dialog/promotion-dialog.css"
+        />
+        <link rel="stylesheet" href="assets/extensions/arrows/arrows.css" />
+        <script type="module" src="/src/index.ts"></script>
+    </head>
+
+    <body>
+        <noscript>
+            <p style="color: red">This site requires JavaScript!</p>
+        </noscript>
+
+        <div id="game_mode_selector">
+            <label> Choose game mode: </label>
+            <button type="button" id="cc">Computer-Computer</button>
+            <button type="button" id="wubc">White user-Black computer</button>
+            <button type="button" id="buwc">Black user-White computer</button>
+        </div>
+
+        <div id="game_container" class="flex_container hidden">
+            <div>
+                <label>
+                    Search depth
+                    <input type="number" id="depth" min="1" max="10" />
+                </label>
+
+                <button type="button" id="switch_orientation">
+                    Switch orientation
+                </button>
+
+                <button type="button" id="next_move" class="hidden">
+                    Next move
+                </button>
+
+                <div id="board"></div>
+
+                <label id="turn"></label>
+            </div>
+
+            <div>
+                <div id="messages"></div>
+            </div>
+        </div>
+
+        <div class="hidden">
+            <svg xmlns="http://www.w3.org/2000/svg">
+                <g id="marker_highlight">
+                    <rect width="40" height="40"></rect>
+                </g>
+            </svg>
+        </div>
+    </body>
+</html>

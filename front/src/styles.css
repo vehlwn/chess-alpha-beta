@@ -1,0 +1,17 @@
+.flex_container {
+    display: flex;
+}
+.flex_container > div {
+    margin: 10px;
+}
+.hidden {
+    display: none !important;
+}
+.marker_highlight {
+    fill: green;
+    opacity: 0.5;
+}
+#board {
+    width: 500px;
+    margin: 10px;
+}

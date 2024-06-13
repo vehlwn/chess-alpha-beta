@@ -99,7 +99,7 @@ pub fn computer_with_computer(config: Config) {
     loop {
         board_pretty_print(&game_board);
 
-        let white_best = get_best_move(&game_board, config.depth);
+        let white_best = get_best_move(&game_board, config.depth).unwrap();
         println!(
             "White move = {}, value = {}",
             white_best.m, white_best.value
@@ -113,7 +113,7 @@ pub fn computer_with_computer(config: Config) {
             break;
         }
 
-        let black_best = get_best_move(&game_board, config.depth);
+        let black_best = get_best_move(&game_board, config.depth).unwrap();
         println!(
             "black move = {}, value = {}",
             black_best.m, black_best.value
@@ -145,7 +145,7 @@ pub fn white_user_with_black_computer(mut config: Config) {
             legal_moves.len()
         );
         if config.evaluate_user {
-            let white_best = get_best_move(&game_board, config.depth);
+            let white_best = get_best_move(&game_board, config.depth).unwrap();
             println!(
                 "White best move = {}, value = {}",
                 white_best.m, white_best.value
@@ -160,7 +160,7 @@ pub fn white_user_with_black_computer(mut config: Config) {
             break;
         }
 
-        let black_best = get_best_move(&game_board, config.depth);
+        let black_best = get_best_move(&game_board, config.depth).unwrap();
         println!(
             "black move = {}, value = {}",
             black_best.m, black_best.value
@@ -179,7 +179,7 @@ pub fn white_user_with_black_computer(mut config: Config) {
 pub fn black_user_with_white_computer(mut config: Config) {
     let mut game_board = pleco::Board::default();
     loop {
-        let white_best = get_best_move(&game_board, config.depth);
+        let white_best = get_best_move(&game_board, config.depth).unwrap();
         println!(
             "white move = {}, value = {}",
             white_best.m, white_best.value
@@ -206,7 +206,7 @@ pub fn black_user_with_white_computer(mut config: Config) {
             legal_moves.len()
         );
         if config.evaluate_user {
-            let black_best = get_best_move(&game_board, config.depth);
+            let black_best = get_best_move(&game_board, config.depth).unwrap();
             println!(
                 "Black best move = {}, value = {}",
                 black_best.m, black_best.value

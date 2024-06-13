@@ -1,4 +1,5 @@
 use crate::board_value::board_value;
+use anyhow::Context;
 
 pub type ValueType = i32;
 
@@ -28,7 +29,7 @@ fn shuffled_move_list(it: pleco::MoveList) -> Vec<pleco::BitMove> {
 pub fn get_best_move(
     board: &pleco::Board,
     depth: std::num::NonZeroU32,
-) -> EvaluatedMove {
+) -> anyhow::Result<EvaluatedMove> {
     use pleco::Player;
     use rayon::prelude::*;
 
@@ -63,13 +64,13 @@ pub fn get_best_move(
             return (m, value);
         })
         .max_by_key(|(_, value)| *value)
-        .expect("No available moves");
+        .context("No available moves")?;
     // Invert color back if current player is minimizer
     best_value *= color;
-    return EvaluatedMove {
+    return Ok(EvaluatedMove {
         m: best_move,
         value: best_value,
-    };
+    });
 }
 
 fn alpha_beta_impl(

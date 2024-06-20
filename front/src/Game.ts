@@ -133,10 +133,12 @@ export class Game extends EventTarget {
     }
 
     undo_whole_move() {
-        this.chess.undo();
-        this.chess.undo();
-        this.board.setPosition(this.chess.fen(), true);
-        this.board.removeMarkers(MarkerHighlight);
+        if (this.chess.history().length >= 2) {
+            this.chess.undo();
+            this.chess.undo();
+            this.board.setPosition(this.chess.fen(), true);
+            this.board.removeMarkers(MarkerHighlight);
+        }
     }
 
     private update_view(last_move: Move) {

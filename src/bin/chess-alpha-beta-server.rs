@@ -46,9 +46,9 @@ async fn api_get_best_move(json: web::Json<GetBestMoveRequest>) -> impl Responde
 #[derive(clap::Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// TCP port where to bind HTTP server
-    #[arg(short, long, default_value = "8081")]
-    port: u16,
+    /// Host and port where to bind HTTP server
+    #[arg(short, long, default_value = "127.0.0.1:8081")]
+    bind_addr: std::net::SocketAddr,
 }
 
 #[actix_web::main]
@@ -87,7 +87,7 @@ async fn main() -> std::io::Result<()> {
             .service(web::scope("/api").service(api_get_best_move))
             .route("/healthy", web::get().to(HttpResponse::Ok))
     })
-    .bind(("0.0.0.0", args.port))?;
+    .bind(args.bind_addr)?;
     log::info!("Server listening {:?}", server.addrs());
     server.run().await
 }

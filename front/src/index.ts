@@ -1,8 +1,8 @@
 import "./styles.css";
 
-import { Chessboard, FEN, COLOR } from "cm-chessboard/src/Chessboard.js";
-import { Markers } from "cm-chessboard/src/extensions/markers/Markers.js";
-import { PromotionDialog } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js";
+import { Chessboard, FEN, COLOR } from "cm-chessboard/src/Chessboard";
+import { Markers } from "cm-chessboard/src/extensions/markers/Markers";
+import { PromotionDialog } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog";
 
 import {
     GameMode,
@@ -22,6 +22,7 @@ let turn_lbl: HTMLLabelElement;
 let depth_input: HTMLInputElement;
 let switch_orientation_btn: HTMLButtonElement;
 let next_move_btn: HTMLButtonElement;
+let undo_btn: HTMLButtonElement;
 let messages_div: HTMLDivElement;
 
 let game: Game;
@@ -58,6 +59,14 @@ function start_game() {
 
     game = new Game(board, game_mode, depth);
     game.addEventListener("turn_changed", (e: TurnChangedEvent) => {
+        if (
+            (e.color === COLOR.white && game_mode === GameMode.WUBC) ||
+            (e.color === COLOR.black && game_mode === GameMode.BUWC)
+        ) {
+            undo_btn.disabled = false;
+        } else {
+            undo_btn.disabled = true;
+        }
         set_turn_text(e.color);
     });
     game.addEventListener("log_message", (e: LogMessageEvent) => {
@@ -66,6 +75,7 @@ function start_game() {
     game.addEventListener("game_over", (e: GameOverEvent) => {
         show_message(`Game over: ${e.message}`);
         next_move_btn.classList.add("hidden");
+        undo_btn.classList.add("hidden");
     });
     game.addEventListener("request_started", () => {
         next_move_btn.disabled = true;
@@ -74,13 +84,18 @@ function start_game() {
         next_move_btn.disabled = false;
     });
 
+    if (game_mode === GameMode.CC) {
+        next_move_btn.classList.remove("hidden");
+        next_move_btn.onclick = () => game.do_computer_move();
+    } else {
+        undo_btn.classList.remove("hidden");
+        undo_btn.disabled = true;
+        undo_btn.onclick = () => game.undo_whole_move();
+    }
+
     set_turn_text(COLOR.white);
     if (game_mode === GameMode.BUWC) {
         game.do_computer_move();
-    }
-
-    if (game_mode === GameMode.CC) {
-        next_move_btn.onclick = () => game.do_computer_move();
     }
 }
 
@@ -88,9 +103,6 @@ function set_game_mode(mode: GameMode) {
     game_mode = mode;
     game_mode_selector.classList.add("hidden");
     game_container_div.classList.remove("hidden");
-    if (game_mode === GameMode.CC) {
-        next_move_btn.classList.remove("hidden");
-    }
     start_game();
 }
 
@@ -144,6 +156,7 @@ window.onload = () => {
     board_div = document.getElementById("board") as HTMLDivElement;
     turn_lbl = document.getElementById("turn") as HTMLLabelElement;
     next_move_btn = document.getElementById("next_move") as HTMLButtonElement;
+    undo_btn = document.getElementById("undo") as HTMLButtonElement;
     messages_div = document.getElementById("messages") as HTMLDivElement;
 
     depth_input.value = DEFAULT_SEARCH_DEPTH.toString();

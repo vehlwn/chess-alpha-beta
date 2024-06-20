@@ -3,9 +3,9 @@ import {
     INPUT_EVENT_TYPE,
     COLOR,
     PIECE
-} from "cm-chessboard/src/Chessboard.js";
-import { MARKER_TYPE } from "cm-chessboard/src/extensions/markers/Markers.js";
-import { PROMOTION_DIALOG_RESULT_TYPE } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js";
+} from "cm-chessboard/src/Chessboard";
+import { MARKER_TYPE } from "cm-chessboard/src/extensions/markers/Markers";
+import { PROMOTION_DIALOG_RESULT_TYPE } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog";
 import { Chess, Square, Move } from "chess.js";
 
 import { CONFIG } from "./config";
@@ -31,14 +31,6 @@ export class TurnChangedEvent extends Event {
         this.color = color;
     }
 }
-export class CheckEvent extends Event {
-    color: COLOR;
-    constructor(color: COLOR) {
-        super("check");
-        this.color = color;
-    }
-}
-
 export class GameOverEvent extends Event {
     message: string;
     constructor(message: string) {
@@ -129,7 +121,7 @@ export class Game extends EventTarget {
 
     set_search_depth(n: number) {
         if (n <= 0 || !Number.isInteger(n)) {
-            throw new Error(`search_depth must be positive integer (${n})`);
+            throw new Error(`search_depth must be positive integer (got: ${n})`);
         }
         this.search_depth = n;
     }
@@ -138,6 +130,13 @@ export class Game extends EventTarget {
         this.board.setOrientation(
             this.board.getOrientation() === COLOR.white ? COLOR.black : COLOR.white
         );
+    }
+
+    undo_whole_move() {
+        this.chess.undo();
+        this.chess.undo();
+        this.board.setPosition(this.chess.fen(), true);
+        this.board.removeMarkers(MarkerHighlight);
     }
 
     private update_view(last_move: Move) {

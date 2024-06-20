@@ -249,8 +249,6 @@ export class Game extends EventTarget {
                 msg = "checkmate";
             } else if (this.chess.isStalemate()) {
                 msg = "stalemate";
-            } else if (this.chess.isDraw()) {
-                msg = "draw";
             }
             this.board.disableMoveInput();
             this.dispatchEvent(new GameOverEvent(msg));

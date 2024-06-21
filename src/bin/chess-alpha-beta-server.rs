@@ -1,5 +1,6 @@
 use actix_cors::Cors;
 use actix_web::{http::header, post, web, App, HttpResponse, HttpServer, Responder};
+use anyhow::Context;
 
 use chess_alpha_beta::alpha_beta::{get_best_move, ValueType};
 
@@ -49,16 +50,35 @@ struct Args {
     /// Host and port where to bind HTTP server
     #[arg(short, long, default_value = "127.0.0.1:8081")]
     bind_addr: std::net::SocketAddr,
+
+    /// Log verbosity
+    #[arg(short, long, default_value = "info")]
+    log_level: log::LevelFilter,
+
+    /// Use systemd_journal_logger instead of env_logger
+    #[arg(short, long)]
+    journald: bool,
+}
+
+fn init_logging(args: &Args) -> anyhow::Result<()> {
+    if args.journald {
+        systemd_journal_logger::JournalLog::new()
+            .context("Failed to crate journal log")?
+            .install()
+            .context("Failed to install journal log")?;
+        log::set_max_level(args.log_level);
+    } else {
+        let mut builder = env_logger::Builder::from_default_env();
+        builder.filter_level(args.log_level).init();
+    }
+    return Ok(());
 }
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    env_logger::Builder::from_env(
-        env_logger::Env::default().default_filter_or("info"),
-    )
-    .init();
+async fn main() -> anyhow::Result<()> {
     use clap::Parser;
     let args = Args::parse();
+    init_logging(&args).context("Failed to init logging")?;
 
     let server = HttpServer::new(|| {
         App::new()
@@ -87,7 +107,8 @@ async fn main() -> std::io::Result<()> {
             .service(web::scope("/api").service(api_get_best_move))
             .route("/healthy", web::get().to(HttpResponse::Ok))
     })
-    .bind(args.bind_addr)?;
+    .bind(args.bind_addr)
+    .with_context(|| format!("Failed to bind HTTP server to {}", args.bind_addr))?;
     log::info!("Server listening {:?}", server.addrs());
-    server.run().await
+    return server.run().await.context("Failed to run server");
 }

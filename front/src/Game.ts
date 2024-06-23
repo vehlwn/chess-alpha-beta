@@ -150,7 +150,6 @@ export class Game extends EventTarget {
                 new LogMessageEvent("captured " + last_move.captured)
             );
         }
-        this.check_game_over();
     }
 
     private highlight_move(m: Move) {
@@ -207,6 +206,7 @@ export class Game extends EventTarget {
                     this.enable_user_input();
                 }
                 this.update_view(last_move);
+                this.check_game_over();
                 this.highlight_move(last_move);
             })
             .catch((e) => {
@@ -242,7 +242,7 @@ export class Game extends EventTarget {
         }
     }
 
-    private check_game_over() {
+    private check_game_over(): boolean {
         if (this.chess.isGameOver()) {
             let msg = "";
             if (this.chess.isCheckmate()) {
@@ -250,11 +250,13 @@ export class Game extends EventTarget {
             } else if (this.chess.isStalemate()) {
                 msg = "stalemate";
             } else {
-                return;
+                return false;
             }
             this.board.disableMoveInput();
             this.dispatchEvent(new GameOverEvent(msg));
+            return true;
         }
+        return false;
     }
 
     private enable_user_input() {
@@ -314,7 +316,9 @@ export class Game extends EventTarget {
             event.chessboard.state.moveInputProcess.then(() => {
                 // update position, maybe castled
                 this.update_view(move_result);
-                this.do_computer_move();
+                if (!this.check_game_over()) {
+                    this.do_computer_move();
+                }
             });
             return true;
         } catch (er) {
@@ -342,7 +346,9 @@ export class Game extends EventTarget {
                                 promotion: selected.piece.charAt(1)
                             });
                             this.update_view(move_result);
-                            this.do_computer_move();
+                            if (!this.check_game_over()) {
+                                this.do_computer_move();
+                            }
                         } else {
                             // promotion canceled
                             this.enable_user_input();

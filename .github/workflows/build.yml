@@ -72,6 +72,9 @@ jobs:
           name: server
           path: server
 
+      - name: Fix exe permission
+        run: chmod +x server/*
+
       - name: Upload artifacts to prod
         run: |
           rsync --archive --delete --verbose front/ prod:/var/www/chess

@@ -20,7 +20,7 @@ pub struct EvaluatedMove {
 
 fn shuffled_move_list(it: pleco::MoveList) -> Vec<pleco::BitMove> {
     use rand::seq::SliceRandom;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut y: Vec<pleco::BitMove> = it.iter().map(|x| *x).collect();
     y.shuffle(&mut rng);
     return y;

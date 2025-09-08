@@ -38,7 +38,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build rust exe
-        run: cargo build --frozen --release
+        run: |
+          cargo fetch --locked
+          cargo build --frozen --release
 
   deploy:
     needs: [build_front, build_backend]

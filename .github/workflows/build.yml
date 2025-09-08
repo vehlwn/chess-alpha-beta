@@ -50,11 +50,17 @@ jobs:
       - name: Set up SSH client
         run: ssh -V
 
-      - name: Download artifacts
+      - name: Download front artifacts
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
+
+      - name: Download server artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: server
+          path: server
 
       - name: tree
         run: tree

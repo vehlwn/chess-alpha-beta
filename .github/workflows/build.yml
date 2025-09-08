@@ -76,3 +76,6 @@ jobs:
         run: |
           rsync --archive --delete --verbose front/ prod:/var/www/chess
           rsync --archive --delete --verbose server/ prod:/opt/chess
+
+      - name: Restart service
+        run: ssh prod sudo systemctl restart chess-alpha-beta.service

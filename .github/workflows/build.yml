@@ -1,0 +1,55 @@
+name: Build and deploy app
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build_front:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    defaults:
+      run:
+        working-directory: front
+
+    steps:
+      - name: Install dependencies
+        run: pacman -Suy --noconfirm --needed nodejs npm
+
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Create artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+  build_backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Build rust exe
+        run: cargo build --frozen --release
+
+    deploy:
+      needs: [build_front, build_backend]
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Set up SSH client
+          run: ssh -V
+
+        - name: Download artifacts
+          uses: actions/download-artifact@v4
+          with:
+            name: dist
+            path: dist

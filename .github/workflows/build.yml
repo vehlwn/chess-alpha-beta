@@ -72,9 +72,6 @@ jobs:
           name: server
           path: server
 
-      - name: List files
-        run: ls -lah server
-
       - name: Fix exe permission
         run: chmod +x server/*
 

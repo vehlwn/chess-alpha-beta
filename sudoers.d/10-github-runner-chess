@@ -1,0 +1,1 @@
+github-runner-chess ALL = NOPASSWD: /usr/bin/systemctl restart chess-alpha-beta.service

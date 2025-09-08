@@ -48,7 +48,17 @@ jobs:
 
     steps:
       - name: Set up SSH client
-        run: ssh -V
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{secrets.SSH_PRIVATE_KEY}}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          cat << EOF > ~/.ssh/config
+            Host prod
+            HostName ${{secrets.DEPLOY_HOST}}
+            Port ${{secrets.SSH_PORT}}
+            User github-runner-chess
+            StrictHostKeyChecking no
+          EOF
 
       - name: Download front artifacts
         uses: actions/download-artifact@v4
@@ -62,5 +72,7 @@ jobs:
           name: server
           path: server
 
-      - name: tree
-        run: tree
+      - name: Upload artifacts to prod
+        run: |
+          rsync --archive --delete --verbose front/ prod:/var/www/chess
+          rsync --archive --delete --verbose server/ prod:/opt/chess

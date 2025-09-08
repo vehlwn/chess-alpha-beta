@@ -4,21 +4,19 @@ version = "0.1.0"
 edition = "2021"
 
 [profile.release]
-codegen-units = 1
 lto = true
-strip = true
 
 [dependencies]
-anyhow = "1.0.95"
-axum = "0.7.9"
-clap  = { version = "4.5.23", features = ["derive"] }
-env_logger = "0.11.6"
-log = "0.4.22"
+anyhow = "1.0.99"
+axum = "0.8.4"
+clap = { version = "4.5.47", features = ["derive"] }
+env_logger = "0.11.8"
+log = "0.4.28"
 pleco = "0.5.0"
-rand = "0.8.5"
-rayon = "1.10.0"
-regex = "1.11.1"
+rand = "0.9.2"
+rayon = "1.11.0"
+regex = "1.11.2"
 serde = { version = "1.0", features = ["derive"] }
-systemd-journal-logger = "2.2.0"
-tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread", "net"] }
-tower-http = { version = "0.6.2", features = ["cors"] }
+systemd-journal-logger = "2.2.2"
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread", "net"] }
+tower-http = { version = "0.6.6", features = ["cors"] }

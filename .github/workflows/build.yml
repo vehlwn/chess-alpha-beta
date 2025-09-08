@@ -49,3 +49,6 @@ jobs:
         with:
           name: dist
           path: dist
+
+      - name: tree
+        run: tree

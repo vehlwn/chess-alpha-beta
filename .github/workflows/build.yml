@@ -8,15 +8,11 @@ on:
 jobs:
   build_front:
     runs-on: ubuntu-latest
-    container: archlinux:latest
     defaults:
       run:
         working-directory: front
 
     steps:
-      - name: Install dependencies
-        run: pacman -Suy --noconfirm --needed nodejs npm
-
       - name: Checkout the code
         uses: actions/checkout@v4
 

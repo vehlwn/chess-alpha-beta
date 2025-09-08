@@ -285,7 +285,7 @@ export class Game extends EventTarget {
         e.chessboard.removeMarkers(AutoMarker);
         e.chessboard.removeLegalMovesMarkers();
         if (
-            this.chess.get(e.squareFrom).color === this.chess.turn() &&
+            this.chess.get(e.squareFrom)?.color === this.chess.turn() &&
             moves.length > 0
         ) {
             e.chessboard.addMarker(AutoMarker, e.squareFrom);

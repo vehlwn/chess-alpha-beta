@@ -8,18 +8,13 @@ on:
 jobs:
   build_front:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: front
 
     steps:
-      - name: pwd
-        run: pwd && ls -lah
-
       - name: Checkout the code
         uses: actions/checkout@v4
 
       - name: Build
+        working-directory: front
         run: |
           npm ci
           npm run build

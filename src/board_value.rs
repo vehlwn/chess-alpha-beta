@@ -27,9 +27,9 @@ fn board_value_impl(board: &pleco::Board, context: &EvaluationContext) -> ValueT
         board.count_pieces_player(pleco::Player::Black),
     ) < 9
     {
-        board.psq().mg()
-    } else {
         board.psq().eg()
+    } else {
+        board.psq().mg()
     } as ValueType
         + mate_score;
 }

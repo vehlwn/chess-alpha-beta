@@ -20,3 +20,10 @@ serde = { version = "1.0", features = ["derive"] }
 systemd-journal-logger = "2.2.2"
 tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread", "net"] }
 tower-http = { version = "0.6.6", features = ["cors"] }
+
+[dev-dependencies]
+criterion = { version = "0.7.0", features = ["html_reports"] }
+
+[[bench]]
+name = "my_benchmark"
+harness = false

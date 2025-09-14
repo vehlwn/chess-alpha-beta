@@ -1,15 +1,15 @@
 use crate::board_value::board_value;
 use anyhow::Context;
+use pleco::Player;
+use rayon::prelude::*;
 
 pub type ValueType = i32;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct EvaluationContext {
-    pub max_depth: u32,
-    pub current_depth: u32,
+    pub depth: u32,
     pub alpha: ValueType,
     pub beta: ValueType,
-    pub color: i32,
 }
 
 #[derive(Debug, Clone)]
@@ -30,19 +30,14 @@ pub fn get_best_move(
     board: &pleco::Board,
     depth: std::num::NonZeroU32,
 ) -> anyhow::Result<EvaluatedMove> {
-    use pleco::Player;
-    use rayon::prelude::*;
-
     let color = match board.turn() {
         Player::White => 1,
         Player::Black => -1,
     };
     let context = EvaluationContext {
-        max_depth: depth.get(),
-        current_depth: depth.get(),
+        depth: depth.get(),
         alpha: -10_000_000,
         beta: 10_000_000,
-        color,
     };
     let possible_moves = shuffled_move_list(board.generate_moves());
     // Use par_iter for the first level of Negamax to remember moves
@@ -55,8 +50,7 @@ pub fn get_best_move(
             let value = -alpha_beta_impl(
                 &experiment_board,
                 EvaluationContext {
-                    current_depth: context.current_depth - 1,
-                    color: -context.color,
+                    depth: context.depth - 1,
                     ..context
                 },
             );
@@ -77,9 +71,13 @@ fn alpha_beta_impl(
     board: &pleco::Board,
     mut context: EvaluationContext,
 ) -> ValueType {
-    if context.current_depth == 0 || board.checkmate() {
+    if context.depth == 0 || board.checkmate() {
+        let color = match board.turn() {
+            Player::White => 1,
+            Player::Black => -1,
+        };
         // Value of a minimizer player must be negated
-        return context.color * board_value(&board, &context);
+        return color * board_value(&board, context.depth);
     }
     if board.stalemate() {
         return 0;
@@ -91,10 +89,9 @@ fn alpha_beta_impl(
         let value = -alpha_beta_impl(
             &experiment_board,
             EvaluationContext {
-                current_depth: context.current_depth - 1,
+                depth: context.depth - 1,
                 alpha: -context.beta,
                 beta: -context.alpha,
-                color: -context.color,
                 ..context
             },
         );

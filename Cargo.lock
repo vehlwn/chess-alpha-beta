@@ -223,7 +223,6 @@ dependencies = [
  "pleco",
  "rand 0.9.2",
  "rayon",
- "regex",
  "serde",
  "systemd-journal-logger",
  "tokio",

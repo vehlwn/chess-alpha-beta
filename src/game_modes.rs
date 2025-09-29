@@ -22,25 +22,43 @@ enum UserCommand {
 
 fn input_user_command(promt: &str) -> Option<UserCommand> {
     let s = input(promt);
-    {
-        let re = regex::Regex::new(r"d\s+(\d+)").unwrap();
-        if let Some(caps) = re.captures(&s) {
-            let depth =
-                caps.get(1)?.as_str().parse::<std::num::NonZeroU32>().ok()?;
-            return Some(UserCommand::ChangeDepth(depth));
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    let c = bytes[i];
+    if c == b'd' {
+        i += 1;
+        while i < s.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+            continue;
         }
-    }
-    {
-        let re = regex::Regex::new(r"e\s+(0|1)").unwrap();
-        if let Some(caps) = re.captures(&s) {
-            let e = caps.get(1)?.as_str().parse::<i32>().ok()? != 0;
-            return Some(UserCommand::ChangeEvaluateUser(e));
+        if i < s.len() && bytes[i].is_ascii_digit() {
+            let mut depth = String::from(char::from(bytes[i]));
+            i += 1;
+            while i < s.len() && bytes[i].is_ascii_digit() {
+                depth.push(char::from(bytes[i]).into());
+                i += 1;
+            }
+            if i == s.len() {
+                return Some(UserCommand::ChangeDepth(
+                    depth.parse::<std::num::NonZeroU32>().ok()?,
+                ));
+            }
         }
-    }
-    {
-        if s == "u" {
-            return Some(UserCommand::Undo);
+    } else if c == b'e' {
+        i += 1;
+        while i < s.len() && bytes[i].is_ascii_whitespace() {
+            i += 1;
+            continue;
         }
+        if i < s.len() {
+            if bytes[i] == b'0' {
+                return Some(UserCommand::ChangeEvaluateUser(false));
+            } else if bytes[i] == b'1' {
+                return Some(UserCommand::ChangeEvaluateUser(true));
+            }
+        }
+    } else if c == b'u' {
+        return Some(UserCommand::Undo);
     }
     return Some(UserCommand::MakeMove(s));
 }

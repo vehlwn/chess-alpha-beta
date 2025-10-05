@@ -3,7 +3,7 @@ Description = Server for chess-alpha-beta
 After = network.target
 
 [Service]
-User = github-runner-chess
+DynamicUser = yes
 ExecStart = /opt/chess/chess-alpha-beta-server --journald -b 127.0.0.1:8051
 
 RestartSec = 10

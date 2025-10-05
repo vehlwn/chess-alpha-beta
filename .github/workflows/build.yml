@@ -82,3 +82,6 @@ jobs:
 
       - name: Restart service
         run: ssh prod sudo systemctl restart chess-alpha-beta.service
+
+      - name: Health check
+        run: ssh prod curl --silent --fail --max-time 10 --show-headers localhost:8051/healthy

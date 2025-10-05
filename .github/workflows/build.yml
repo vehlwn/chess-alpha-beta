@@ -73,7 +73,7 @@ jobs:
           path: server
 
       - name: Fix exe permission
-        run: chmod +x server/*
+        run: chmod --verbose +x server/*
 
       - name: Upload artifacts to prod
         run: |

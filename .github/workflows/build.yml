@@ -28,6 +28,9 @@ jobs:
 
   build_backend:
     runs-on: ubuntu-latest
+    # Make sure CI fails on all warnings, including Clippy lints
+    env:
+      RUSTFLAGS: "-Dwarnings"
     steps:
       - name: Checkout the code
         uses: actions/checkout@v5

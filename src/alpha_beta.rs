@@ -21,9 +21,9 @@ pub struct EvaluatedMove {
 fn shuffled_move_list(it: pleco::MoveList) -> Vec<pleco::BitMove> {
     use rand::seq::SliceRandom;
     let mut rng = rand::rng();
-    let mut y: Vec<pleco::BitMove> = it.iter().map(|x| *x).collect();
+    let mut y: Vec<pleco::BitMove> = it.iter().copied().collect();
     y.shuffle(&mut rng);
-    return y;
+    y
 }
 
 pub fn get_best_move(
@@ -55,16 +55,16 @@ pub fn get_best_move(
                 },
             );
             experiment_board.undo_move();
-            return (m, value);
+            (m, value)
         })
         .max_by_key(|(_, value)| *value)
         .context("No available moves")?;
     // Invert color back if current player is minimizer
     best_value *= color;
-    return Ok(EvaluatedMove {
+    Ok(EvaluatedMove {
         m: best_move,
         value: best_value,
-    });
+    })
 }
 
 fn alpha_beta_impl(
@@ -77,7 +77,7 @@ fn alpha_beta_impl(
             Player::Black => -1,
         };
         // Value of a minimizer player must be negated
-        return color * board_value(&board, context.depth);
+        return color * board_value(board, context.depth);
     }
     if board.stalemate() {
         return 0;
@@ -92,7 +92,6 @@ fn alpha_beta_impl(
                 depth: context.depth - 1,
                 alpha: -context.beta,
                 beta: -context.alpha,
-                ..context
             },
         );
         experiment_board.undo_move();
@@ -102,5 +101,5 @@ fn alpha_beta_impl(
             break;
         }
     }
-    return best_value;
+    best_value
 }

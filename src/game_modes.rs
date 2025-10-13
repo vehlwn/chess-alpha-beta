@@ -10,7 +10,7 @@ fn input(promt: &str) -> String {
     std::io::stdin()
         .read_line(&mut ret)
         .expect("Failed to read line");
-    return ret.trim().to_string();
+    ret.trim().to_string()
 }
 
 enum UserCommand {
@@ -35,7 +35,7 @@ fn input_user_command(promt: &str) -> Option<UserCommand> {
             let mut depth = String::from(char::from(bytes[i]));
             i += 1;
             while i < s.len() && bytes[i].is_ascii_digit() {
-                depth.push(char::from(bytes[i]).into());
+                depth.push(char::from(bytes[i]));
                 i += 1;
             }
             if i == s.len() {
@@ -60,7 +60,7 @@ fn input_user_command(promt: &str) -> Option<UserCommand> {
     } else if c == b'u' {
         return Some(UserCommand::Undo);
     }
-    return Some(UserCommand::MakeMove(s));
+    Some(UserCommand::MakeMove(s))
 }
 
 fn handle_user_move(game_board: &mut pleco::Board, config: &mut Config) {
@@ -83,7 +83,7 @@ fn handle_user_move(game_board: &mut pleco::Board, config: &mut Config) {
                     println!("Undoing...");
                     game_board.undo_move();
                     game_board.undo_move();
-                    board_pretty_print(&game_board);
+                    board_pretty_print(game_board);
                     continue;
                 } else {
                     println!("Cannot be undone");

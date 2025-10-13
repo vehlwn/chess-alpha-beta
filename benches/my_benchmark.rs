@@ -1,14 +1,14 @@
 use chess_alpha_beta::alpha_beta::{EvaluatedMove, EvaluationContext, ValueType};
 use chess_alpha_beta::board_value::board_value;
 
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 
 mod minimax {
     use super::*;
 
     fn orig_minimax(board: &pleco::Board, context: EvaluationContext) -> ValueType {
         if context.depth == 0 || board.checkmate() || board.stalemate() {
-            return board_value(&board, context.depth);
+            return board_value(board, context.depth);
         }
 
         let mut experiment_board = board.clone();
@@ -27,7 +27,7 @@ mod minimax {
                 ));
                 experiment_board.undo_move();
             }
-            return best_value;
+            best_value
         } else {
             let mut best_value = 10_000_000;
             for m in board.generate_moves() {
@@ -41,7 +41,7 @@ mod minimax {
                 ));
                 experiment_board.undo_move();
             }
-            return best_value;
+            best_value
         }
     }
 
@@ -50,7 +50,7 @@ mod minimax {
         mut context: EvaluationContext,
     ) -> ValueType {
         if context.depth == 0 || board.checkmate() || board.stalemate() {
-            return board_value(&board, context.depth);
+            return board_value(board, context.depth);
         }
 
         let mut experiment_board = board.clone();
@@ -65,7 +65,6 @@ mod minimax {
                         depth: context.depth - 1,
                         alpha: context.alpha,
                         beta: context.beta,
-                        ..context
                     },
                 ));
                 experiment_board.undo_move();
@@ -74,7 +73,7 @@ mod minimax {
                     break;
                 }
             }
-            return best_value;
+            best_value
         } else {
             let mut best_value = 10_000_000;
             for m in board.generate_moves() {
@@ -85,7 +84,6 @@ mod minimax {
                         depth: context.depth - 1,
                         alpha: context.alpha,
                         beta: context.beta,
-                        ..context
                     },
                 ));
                 experiment_board.undo_move();
@@ -94,7 +92,7 @@ mod minimax {
                     break;
                 }
             }
-            return best_value;
+            best_value
         }
     }
 
@@ -110,7 +108,6 @@ mod minimax {
             depth: depth.get() - 1,
             alpha: ValueType::MIN,
             beta: ValueType::MAX,
-            ..Default::default()
         };
         if board.turn() == pleco::Player::White {
             best_value = -10_000_000;
@@ -135,24 +132,24 @@ mod minimax {
                 experiment_board.undo_move();
             }
         }
-        return EvaluatedMove {
+        EvaluatedMove {
             m: best_move.unwrap(),
             value: best_value,
-        };
+        }
     }
 
     pub fn find_best_move_minimax(
         board: &pleco::Board,
         depth: std::num::NonZeroU32,
     ) -> EvaluatedMove {
-        return find_best_move(board, depth, &orig_minimax);
+        find_best_move(board, depth, orig_minimax)
     }
 
     pub fn find_best_move_minimax_alpha_beta(
         board: &pleco::Board,
         depth: std::num::NonZeroU32,
     ) -> EvaluatedMove {
-        return find_best_move(board, depth, &alpha_beta_minimax);
+        find_best_move(board, depth, alpha_beta_minimax)
     }
 }
 
@@ -165,7 +162,7 @@ mod negamax {
                 pleco::Player::White => 1,
                 pleco::Player::Black => -1,
             };
-            return color * board_value(&board, context.depth);
+            return color * board_value(board, context.depth);
         }
 
         let mut experiment_board = board.clone();
@@ -182,7 +179,7 @@ mod negamax {
             ));
             experiment_board.undo_move();
         }
-        return best_value;
+        best_value
     }
 
     fn negamax_alpha_beta(
@@ -194,7 +191,7 @@ mod negamax {
                 pleco::Player::White => 1,
                 pleco::Player::Black => -1,
             };
-            return color * board_value(&board, context.depth);
+            return color * board_value(board, context.depth);
         }
 
         let mut experiment_board = board.clone();
@@ -208,7 +205,6 @@ mod negamax {
                     depth: context.depth - 1,
                     alpha: -context.beta,
                     beta: -context.alpha,
-                    ..context
                 },
             ));
             experiment_board.undo_move();
@@ -217,7 +213,7 @@ mod negamax {
                 break;
             }
         }
-        return best_value;
+        best_value
     }
 
     fn find_best_move<F: Fn(&pleco::Board, EvaluationContext) -> ValueType>(
@@ -232,7 +228,6 @@ mod negamax {
             depth: depth.get() - 1,
             alpha: -10_000_000,
             beta: 10_000_000,
-            ..Default::default()
         };
         for m in board.generate_moves() {
             experiment_board.apply_move(m);
@@ -246,24 +241,24 @@ mod negamax {
         if board.turn() == pleco::Player::Black {
             best_value = -best_value;
         }
-        return EvaluatedMove {
+        EvaluatedMove {
             m: best_move.unwrap(),
             value: best_value,
-        };
+        }
     }
 
     pub fn find_best_move_negamax(
         board: &pleco::Board,
         depth: std::num::NonZeroU32,
     ) -> EvaluatedMove {
-        return find_best_move(board, depth, orig_negamax);
+        find_best_move(board, depth, orig_negamax)
     }
 
     pub fn find_best_move_negamax_alpha_beta(
         board: &pleco::Board,
         depth: std::num::NonZeroU32,
     ) -> EvaluatedMove {
-        return find_best_move(board, depth, negamax_alpha_beta);
+        find_best_move(board, depth, negamax_alpha_beta)
     }
 }
 

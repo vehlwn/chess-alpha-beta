@@ -7,7 +7,7 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
-use chess_alpha_beta::alpha_beta::{get_best_move, ValueType};
+use chess_alpha_beta::alpha_beta::{ValueType, get_best_move};
 
 #[derive(serde::Deserialize)]
 struct GetBestMoveRequest {
@@ -37,7 +37,7 @@ async fn api_get_best_move(Json(json): Json<GetBestMoveRequest>) -> Response {
                 .into_response();
         }
     };
-    return match get_best_move(&board, json.search_depth) {
+    match get_best_move(&board, json.search_depth) {
         Ok(ok) => axum::response::Json(GetBestMoveResponse {
             m: ok.m.to_string(),
             value: ok.value,
@@ -48,7 +48,7 @@ async fn api_get_best_move(Json(json): Json<GetBestMoveRequest>) -> Response {
             format!("get_best_move failed: {e}"),
         )
             .into_response(),
-    };
+    }
 }
 
 /// Server program for chess-alpha-beta
@@ -79,7 +79,7 @@ fn init_logging(args: &Args) -> anyhow::Result<()> {
         let mut builder = env_logger::Builder::from_default_env();
         builder.filter_level(args.log_level).init();
     }
-    return Ok(());
+    Ok(())
 }
 
 #[tokio::main]
